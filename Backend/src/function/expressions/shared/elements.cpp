@@ -137,8 +137,6 @@ IncrementedSize incrementRSASize(
     FunctionState* functionState,
     LLVMBuilderRef builder,
     WrapperPtrLE rsaWPtrLE) {
-  // A runtime-sized array always lives behind a pointer, never inline, so its size is always
-  // in its wrapper.
   auto sizePtrLE = ::getRuntimeSizedArrayLengthPtr(globalState, builder, rsaWPtrLE);
 
   adjustCounterV(globalState, builder, globalState->metalCache->i32Type, sizePtrLE, 1, false);
