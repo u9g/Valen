@@ -854,7 +854,6 @@ LLVMTypeRef RCImm::translateType(Kind* referenceM) {
     // return primitives.translatePrimitive(globalState, referenceM);
   } else {
     if (dynamic_cast<Str *>(valueType) != nullptr) {
-      assert(dynamic_cast<ShareRef*>(referenceM) != nullptr);
       return LLVMPointerType(kindStructs.getStringWrapperStruct(), 0);
     } else if (auto staticSizedArrayMT = dynamic_cast<StaticSizedArrayT *>(valueType)) {
       assert(dynamic_cast<ShareRef*>(referenceM) != nullptr);
