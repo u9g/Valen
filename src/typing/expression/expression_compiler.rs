@@ -1224,6 +1224,12 @@ where
           (KindT::Never(NeverT { from_break: true }), _) => uncoerced_else_block_2.result,
           (_, KindT::Never(NeverT { from_break: true })) => uncoerced_then_block_2.result,
           (a, b) if a == b => uncoerced_then_block_2.result,
+          // One side borrows a value the other has, like `x and s.flag` (lowered to
+          // `if x { s.flag } else { false }`): use the value, which convert copies the borrow into.
+          (KindT::BorrowRef(a_borrow), b)
+            if a_borrow.inner == b && self.kind_is_implicitly_cloneable(coutputs, b) => b,
+          (a, KindT::BorrowRef(b_borrow))
+            if b_borrow.inner == a && self.kind_is_implicitly_cloneable(coutputs, a) => a,
           (a, b) => {
             let a_citizen = ICitizenTT::try_from(a);
             let b_citizen = ICitizenTT::try_from(b);
