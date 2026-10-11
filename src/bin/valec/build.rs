@@ -62,7 +62,7 @@ pub struct BuildArgs {
   #[arg(long, default_value_t = true)]
   sanity_check: bool,
 
-  #[arg(long, default_value_t = true)]
+  #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
   borrow_check: bool,
 
   #[arg(long, default_value_t = false)]
