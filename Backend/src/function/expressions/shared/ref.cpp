@@ -37,7 +37,16 @@ LiveRef toLiveRef(WrapperPtrLE wrapperPtrLE) {
 }
 
 WrapperPtrLE toWrapperPtr(FunctionState* functionState, LLVMBuilderRef builder, KindStructs* kindStructs, Kind* refMT, LiveRef liveRef) {
-  return kindStructs->makeWrapperPtr(FL(), functionState, builder, refMT, liveRef.refLE);
+  auto ptrLE = liveRef.refLE;
+  // A borrow points at the slot holding its referent. A runtime-sized array's value is already a
+  // pointer to its wrapper, so a borrow of one has to load that pointer out of the slot.
+  if (auto borrowRef = dynamic_cast<BorrowRef*>(refMT)) {
+    if (dynamic_cast<RuntimeSizedArrayT*>(peel_all_references(borrowRef->inner))) {
+      auto ptrLT = LLVMPointerTypeInContext(LLVMGetTypeContext(LLVMTypeOf(ptrLE)), 0);
+      ptrLE = LLVMBuildLoad2(builder, ptrLT, ptrLE, "rsaWrapperPtr");
+    }
+  }
+  return kindStructs->makeWrapperPtr(FL(), functionState, builder, refMT, ptrLE);
 }
 
 LiveRef toLiveRef(
