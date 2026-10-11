@@ -595,8 +595,15 @@ LoadResult Unsafe::loadElementFromRSA(
     LiveRef arrayRef,
     InBoundsLE indexInBoundsLE) {
   auto rsaDef = globalState->program->getRuntimeSizedArray(rsaMT);
-  return regularLoadElementFromRSAWithoutUpgrade(
-      globalState, functionState, builder, &kindStructs, true, rsaRefMT, rsaDef->elementType, arrayRef, indexInBoundsLE);
+  auto elementType = rsaDef->elementType;
+  auto arrayWrapperPtrLE = toWrapperPtr(functionState, builder, &kindStructs, rsaRefMT, arrayRef);
+  auto arrayElementsPtrLE = getRuntimeSizedArrayContentsPtr(builder, true, arrayWrapperPtrLE);
+  auto elementLT = globalState->getRegion(elementType)->translateType(elementType);
+  LLVMValueRef indices[2] = { constI32LE(globalState, 0), indexInBoundsLE.refLE };
+  auto elementPtrLE =
+      LLVMBuildInBoundsGEP2(builder, LLVMArrayType(elementLT, 0), arrayElementsPtrLE, indices, 2, "rsaElemPtr");
+  auto elementBorrowType = globalState->metalCache->getBorrowRef(elementType);
+  return LoadResult{toRef(globalState->getRegion(elementBorrowType), elementBorrowType, elementPtrLE)};
 }
 
 Ref Unsafe::storeElementInRSA(

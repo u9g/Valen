@@ -703,9 +703,9 @@ Ref translateExpressionInner(
         globalState->getRegion(arrayValueType)->loadElementFromRSA(
             functionState, builder, arrayType, arrayKind, arrayLiveRef, indexInBoundsLE);
     auto resultRef =
-        globalState->getRegion(elementType)
+        globalState->getRegion(resultValueType)
             ->upgradeLoadResultToRefWithTargetOwnership(
-                functionState, builder, elementType, resultType, loadResult);
+                functionState, builder, globalState->metalCache->getBorrowRef(elementType), resultType, loadResult);
 
     globalState->getRegion(resultValueType)
         ->alias(FL(), functionState, builder, resultType, resultRef);
