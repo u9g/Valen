@@ -77,7 +77,17 @@ pub fn populate_metal_cache<'cache, 's, 'i>(
 where
     's: 'i,
 {
-    let lowerer = Lowerer { cache, code_map, current_group_facts: RefCell::new(None) };
+    let mut lowerer =
+        Lowerer { cache, code_map, current_group_facts: RefCell::new(None), interface_methods: Vec::new() };
+    let interface_methods = monouts
+        .interfaces
+        .iter()
+        .map(|it| {
+            let methods = it.internal_methods.iter().map(|(proto, _)| lowerer.lower_prototype(proto)).collect();
+            (lowerer.lower_id_to_name(&it.instantiated_interface.id), methods)
+        })
+        .collect();
+    lowerer.interface_methods = interface_methods;
 
     let pb = cache.new_program_builder();
     for p in monouts.packages.iter() {
@@ -98,6 +108,9 @@ struct Lowerer<'cache, 'cm, 'sm> {
     cache: &'cache MetalCache,
     code_map: &'cm FileCoordinateMap<'sm, String>,
     current_group_facts: RefCell<Option<LoweredAliasingFacts>>,
+    // Each interface's methods in itable order: only the abstract functions instantiated for it,
+    // so an interface call's slot is its position here, not in the interface template.
+    interface_methods: Vec<(Name<'cache>, Vec<Prototype<'cache>>)>,
 }
 
 fn code_map<'s>(loc: CodeLocationS<'s>) -> String {
@@ -530,14 +543,28 @@ impl<'cache, 'cm, 'sm> Lowerer<'cache, 'cm, 'sm> {
                 self.lower_kind(x.result),
                 loc,
             ),
-            ExpressionIE::InterfaceFunctionCall(x) => c.expr_interface_call(
-                self.lower_prototype(x.super_function_prototype),
-                x.virtual_param_index,
-                x.index_in_edge,
-                &self.lower_exprs(x.args),
-                self.lower_kind(x.result),
-                loc,
-            ),
+            ExpressionIE::InterfaceFunctionCall(x) => {
+                let prototype = self.lower_prototype(x.super_function_prototype);
+                let interface_id = x.super_function_prototype.param_types()[x.virtual_param_index as usize]
+                    .peel_all_references()
+                    .expect_interface()
+                    .id;
+                let interface_name = self.lower_id_to_name(&interface_id);
+                let index_in_itable = self
+                    .interface_methods
+                    .iter()
+                    .find(|(name, _)| *name == interface_name)
+                    .and_then(|(_, methods)| methods.iter().position(|method| *method == prototype))
+                    .expect("interface call's method isn't among its interface's instantiated methods");
+                c.expr_interface_call(
+                    prototype,
+                    x.virtual_param_index,
+                    index_in_itable as i32,
+                    &self.lower_exprs(x.args),
+                    self.lower_kind(x.result),
+                    loc,
+                )
+            }
 
             ExpressionIE::If(x) => c.expr_if(
                 self.lower_expression(&x.condition),
