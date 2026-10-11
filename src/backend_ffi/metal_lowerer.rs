@@ -602,7 +602,11 @@ impl<'cache, 'cm, 'sm> Lowerer<'cache, 'cm, 'sm> {
                 loc,
             ),
             ExpressionIE::DestroyRuntimeSizedArray(x) => {
-                c.expr_destroy_mut_runtime_sized_array(self.lower_expression(&x.array_expr), loc)
+                c.expr_destroy_mut_runtime_sized_array(
+                    self.lower_expression(&x.array_expr),
+                    self.lower_kind(x.array_type),
+                    loc,
+                )
             }
         }
     }

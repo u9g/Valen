@@ -227,7 +227,7 @@ ExpressionHandle* metal_expr_destroy_static_sized_array_into_function(
 ExpressionHandle* metal_expr_destroy_static_sized_array_into_locals(
     ExpressionHandle* expr, KindHandle* static_sized_array,
     LocalHandle* const* destination_locals, size_t local_count, SourceLocationHandle* loc);
-ExpressionHandle* metal_expr_destroy_mut_runtime_sized_array(ExpressionHandle* array_expr, SourceLocationHandle* loc);
+ExpressionHandle* metal_expr_destroy_mut_runtime_sized_array(ExpressionHandle* array_expr, KindHandle* array_type, SourceLocationHandle* loc);
 
 
 PackageBuilderHandle* metal_package_builder_new(

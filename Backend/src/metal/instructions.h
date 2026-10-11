@@ -609,8 +609,9 @@ public:
 
   DestroyRuntimeSizedArray(
       SourceLocation* sourceLocation_,
-      Expression* arrayExpr_) :
-    Expression(sourceLocation_), arrayExpr(arrayExpr_) {}
+      Expression* arrayExpr_,
+      Kind* arrayType_) :
+    Expression(sourceLocation_), arrayExpr(arrayExpr_), arrayType(arrayType_) {}
 };
 
 class NewStruct : public Expression {

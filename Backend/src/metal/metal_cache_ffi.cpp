@@ -503,8 +503,8 @@ extern "C" VIS ExpressionHandle* metal_expr_destroy_static_sized_array_into_loca
       ex(expr), reinterpret_cast<StaticSizedArrayT*>(knd(static_sized_array)),
       locals(destination_locals, local_count)));
 }
-extern "C" VIS ExpressionHandle* metal_expr_destroy_mut_runtime_sized_array(ExpressionHandle* array_expr, SourceLocationHandle* source_loc) {
-  return reinterpret_cast<ExpressionHandle*>(new DestroyRuntimeSizedArray(srcloc(source_loc), ex(array_expr)));
+extern "C" VIS ExpressionHandle* metal_expr_destroy_mut_runtime_sized_array(ExpressionHandle* array_expr, KindHandle* array_type, SourceLocationHandle* source_loc) {
+  return reinterpret_cast<ExpressionHandle*>(new DestroyRuntimeSizedArray(srcloc(source_loc), ex(array_expr), knd(array_type)));
 }
 
 

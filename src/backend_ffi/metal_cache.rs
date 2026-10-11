@@ -280,7 +280,7 @@ extern "C" {
         expr: *mut c_void, static_sized_array: *mut c_void,
         destination_locals: *const *mut c_void, local_count: usize, loc: *mut c_void,
     ) -> *mut c_void;
-    fn metal_expr_destroy_mut_runtime_sized_array(array_expr: *mut c_void, loc: *mut c_void) -> *mut c_void;
+    fn metal_expr_destroy_mut_runtime_sized_array(array_expr: *mut c_void, array_type: *mut c_void, loc: *mut c_void) -> *mut c_void;
 
     fn metal_package_builder_new(_: *mut MetalCacheHandleRaw, package_coord: *mut c_void, is_rust_crate: bool) -> *mut c_void;
     fn metal_package_builder_add_interface(_: *mut c_void, name_ptr: *const c_char, name_len: usize, v: *mut c_void);
@@ -824,8 +824,8 @@ impl MetalCache {
         let ptrs = ptrs!(destination_locals);
         unsafe { Expression(NonNull::new(metal_expr_destroy_static_sized_array_into_locals(expr.0.as_ptr(), static_sized_array.0.as_ptr(), ptrs.as_ptr(), ptrs.len(), loc_ptr(loc))).unwrap(), PhantomData) }
     }
-    pub fn expr_destroy_mut_runtime_sized_array<'c>(&'c self, array_expr: Expression<'c>, loc: SourceLocation<'c>) -> Expression<'c> {
-        unsafe { Expression(NonNull::new(metal_expr_destroy_mut_runtime_sized_array(array_expr.0.as_ptr(), loc_ptr(loc))).unwrap(), PhantomData) }
+    pub fn expr_destroy_mut_runtime_sized_array<'c>(&'c self, array_expr: Expression<'c>, array_type: Kind<'c>, loc: SourceLocation<'c>) -> Expression<'c> {
+        unsafe { Expression(NonNull::new(metal_expr_destroy_mut_runtime_sized_array(array_expr.0.as_ptr(), array_type.0.as_ptr(), loc_ptr(loc))).unwrap(), PhantomData) }
     }
 
     pub fn new_package_builder<'c>(
