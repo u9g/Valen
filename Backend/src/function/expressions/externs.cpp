@@ -408,18 +408,12 @@ Ref buildExternCall(
   } else if (builtinName == "__vbi_strLength") {
     assert(args.size() == 1);
 
-    auto expectedType = globalState->metalCache->str;
+    auto strRefMT = prototype->params[0];
+    auto strRegion = globalState->getRegion(globalState->metalCache->str);
 
-    auto strLiveRef =
-        globalState->getRegion(expectedType)
-        ->checkRefLive(FL(), functionState, builder, expectedType, args[0]);
-
-    auto resultLenLE =
-        globalState->getRegion(expectedType)
-        ->getStringLen(
-            functionState, builder, expectedType, strLiveRef);
-    globalState->getRegion(expectedType)
-        ->dealias(FL(), functionState, builder, expectedType, args[0]);
+    auto strLiveRef = strRegion->checkRefLive(FL(), functionState, builder, strRefMT, args[0]);
+    auto resultLenLE = strRegion->getStringLen(functionState, builder, strRefMT, strLiveRef);
+    strRegion->dealias(FL(), functionState, builder, strRefMT, args[0]);
     return toRef(globalState->getRegion(prototype->returnType), prototype->returnType, resultLenLE);
   }
   // VCOORD: TEMPORARY: this whole section exists only until str is a proper Vale
@@ -429,8 +423,8 @@ Ref buildExternCall(
            builtinName == "__vbi_strindexof") {
     // Signature: (a str, aBegin i32, aEnd i32, b str, bBegin i32, bEnd i32) -> str|bool|i32
     assert(args.size() == 6);
-    auto strTypeA = globalState->metalCache->str;
-    auto strTypeB = globalState->metalCache->str;
+    auto strTypeA = prototype->params[0];
+    auto strTypeB = prototype->params[3];
 
     auto aLiveRef = globalState->getRegion(strTypeA)
         ->checkRefLive(FL(), functionState, builder, strTypeA, args[0]);
@@ -521,7 +515,7 @@ Ref buildExternCall(
   } else if (builtinName == "__vbi_substring") {
     // Signature: (s str, begin i32, end i32) -> str
     assert(args.size() == 3);
-    auto strType = globalState->metalCache->str;
+    auto strType = prototype->params[0];
     auto liveRef = globalState->getRegion(strType)
         ->checkRefLive(FL(), functionState, builder, strType, args[0]);
     auto baseLE = globalState->getRegion(strType)
@@ -549,7 +543,7 @@ Ref buildExternCall(
     // Signature: (s str, begin i32, end i32) -> i32
     // Loads byte at s.chars[begin] and returns it zero-extended.
     assert(args.size() == 3);
-    auto strType = globalState->metalCache->str;
+    auto strType = prototype->params[0];
     auto liveRef = globalState->getRegion(strType)
         ->checkRefLive(FL(), functionState, builder, strType, args[0]);
     auto baseLE = globalState->getRegion(strType)
@@ -579,7 +573,7 @@ Ref buildExternCall(
   } else if (builtinName == "__vbi_printstr") {
     // Signature: (s str, start i32, length i32) -> void
     assert(args.size() == 3);
-    auto strType = globalState->metalCache->str;
+    auto strType = prototype->params[0];
     auto liveRef = globalState->getRegion(strType)
         ->checkRefLive(FL(), functionState, builder, strType, args[0]);
     auto baseLE = globalState->getRegion(strType)
